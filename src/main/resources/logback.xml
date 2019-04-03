@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<configuration>-->
+<configuration debug="true">
+
+    <!--In this project we will have 4 logging flows, as follows:-->
+    <!--1. Logback > console (will log all levels)-->
+    <!--2. Logback > Filebeat > Elasticsearch > Kibana (Logback will log to *.json file; will log ERROR level only)-->
+    <!--3. Logback > Logstash > Elasticsearch > Kibana (Logback will send events directly to Logstash via TCP; will log INFO level only)-->
+    <!--4. Logback > Filebeat > Logstash > Elasticsearch > Kibana (Logback will log to plain *.log file; will log WARN level only)-->
+    <!--For each of these flows we need to define a separate appender here.-->
+
+    <!-- Define the filename for all persisted log files -->
+    <property name="LOG_FILE" value="./logs/elastic-logging"/>​
+
+    <!--1st flow: Logback > console-->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %highlight(%-5level) %logger{40} - %msg %n
+            </pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!--2nd flow: Logback > Filebeat > Elasticsearch > Kibana-->
+    <appender name="filebeat" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.json.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <mdc/>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <stackHash/>
+                <pattern>
+                    <pattern>
+                        {
+                        "log.level": "%level",
+                        "log.method": "%thread",
+                        "log.package": "%logger",
+                        "message": "%message",
+                        "error.message": "%exception"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!--3rd flow: Logback > Logstash > Elasticsearch > Kibana-->
+    <appender name="logstash" class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">
+        <destination>localhost:4560</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!--4th flow: Logback > Filebeat > Logstash > Elasticsearch > Kibana-->
+    <appender name="fullstack" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %-5level %logger{40} - %msg %n</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+    ​
+    <root level="TRACE">
+        <appender-ref ref="console"/>
+        <appender-ref ref="filebeat"/>
+        <appender-ref ref="logstash"/>
+        <appender-ref ref="fullstack"/>
+    </root>
+
+</configuration>
