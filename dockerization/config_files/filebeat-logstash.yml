@@ -2,7 +2,7 @@ filebeat.inputs:
 - type: log
   enabled: true
   paths:
-    - ../../logs/*.log
+    - /mnt/logs/*.log
   json:
     message_key: message
 filebeat.config.modules:
@@ -10,14 +10,14 @@ filebeat.config.modules:
   reload.enabled: false
 setup.template.settings:
   index.number_of_shards: 3
-name: filebeat_to_logstash_4
+name: filebeat_to_logstash
 setup.kibana:
 output.logstash:
-  hosts: ["localhost:5044"]
+  hosts: ["logstash:5044"]
 processors:
   - add_host_metadata: ~
   - add_cloud_metadata: ~
 logging.level: debug
 xpack.monitoring.enabled: true
 xpack.monitoring.elasticsearch:
-  hosts: ["localhost:9200"]
+  hosts: ["elasticsearch:9200"]
