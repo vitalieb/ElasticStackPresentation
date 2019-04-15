@@ -15,7 +15,7 @@ setup.template.pattern: "filebeat_elasticsearch-%{[beat.version]}-*"
 setup.kibana:
 output.elasticsearch:
   hosts: ["elasticsearch:9200"]
-  index: "filebeat_elasticsearch"
+  index: "elastic_filebeat_elasticsearch"
 processors:
   - add_host_metadata: ~
   - add_cloud_metadata: ~

@@ -45,7 +45,8 @@ services:
       - '127.0.0.1:5044:5044'
     volumes:
       # Provide a pipeline configuration for Logstash with a bind-mounted file
-      - ./dockerization/config_files/logstash.config:/usr/share/logstash/pipeline/logstash.config
+      - './dockerization/config_files/logstash/config/:/usr/share/logstash/config/'
+#      - './dockerization/config_files/logstash/pipeline/:/usr/share/logstash/pipeline/'
     networks:
       - stack
     depends_on:
@@ -73,7 +74,7 @@ services:
 
 
   # Filebeat sending data to Elasticsearch
-  c:
+  filebeat_for_elasticsearch:
     image: docker.elastic.co/beats/filebeat:${ELASTIC_STACK_VERSION}
     hostname: filebeat_for_elasticsearch
     container_name: filebeat_for_elasticsearch
